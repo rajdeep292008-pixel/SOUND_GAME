@@ -51,4 +51,5 @@ Simon Memory Master is a modern reimagining of the classic electronic memory gam
 ---
    
 Built as a high-performance, single-file web application.
+
 Made with 💚 with the help of AI.
