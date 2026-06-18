@@ -7,7 +7,8 @@ A professional, production-quality browser-based Simon memory game built with pu
 
 ---
 
-## 🚀 OverviewSimon Memory Master is a modern reimagining of the classic electronic memory game. The game challenges players to replicate increasingly complex sequences of colors and sounds, testing their cognitive recall and reflexes.
+## 🚀 Overview
+Simon Memory Master is a modern reimagining of the classic electronic memory game. The game challenges players to replicate increasingly complex sequences of colors and sounds, testing their cognitive recall and reflexes.
 
 ---
 
