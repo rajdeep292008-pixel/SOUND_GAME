@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simon Memory Master</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --glass: rgba(255, 255, 255, 0.05);
+            --red: #ef4444; --blue: #3b82f6; --green: #22c55e; --yellow: #eab308;
+        }
+        body { margin: 0; background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
+        #game-container { text-align: center; width: 90%; max-width: 500px; background: var(--glass); padding: 2rem; border-radius: 20px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
+        .pad { height: 120px; border-radius: 15px; cursor: pointer; transition: 0.1s; border: 2px solid transparent; opacity: 0.6; }
+        .pad:active { transform: scale(0.95); }
+        .active { opacity: 1; box-shadow: 0 0 30px currentColor; border-color: white; }
+        #controls { margin-top: 20px; }
+        button { padding: 10px 25px; border-radius: 25px; border: none; background: white; color: var(--bg); font-weight: bold; cursor: pointer; }
+        .stats { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <h1>Simon Memory</h1>
+    <div class="stats">
+        <span>Level: <span id="level">0</span></span>
+        <span>High Score: <span id="best">0</span></span>
+    </div>
+    <div class="grid">
+        <div class="pad" id="red" style="background: var(--red); color: var(--red)" data-key="r"></div>
+        <div class="pad" id="blue" style="background: var(--blue); color: var(--blue)" data-key="b"></div>
+        <div class="pad" id="green" style="background: var(--green); color: var(--green)" data-key="g"></div>
+        <div class="pad" id="yellow" style="background: var(--yellow); color: var(--yellow)" data-key="y"></div>
+    </div>
+    <div id="controls">
+        <button id="start-btn">START GAME</button>
+    </div>
+</div>
+
+<script>
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const pads = {
+        red: { el: document.getElementById('red'), freq: 261.63 },
+        blue: { el: document.getElementById('blue'), freq: 329.63 },
+        green: { el: document.getElementById('green'), freq: 392.00 },
+        yellow: { el: document.getElementById('yellow'), freq: 523.25 }
+    };
+
+    let sequence = [], playerSeq = [], playing = false, level = 0;
+    
+    const playTone = (freq) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        osc.start();
+        gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.5);
+        osc.stop(audioCtx.currentTime + 0.5);
+    };
+
+    const flash = (color) => {
+        const pad = pads[color].el;
+        pad.classList.add('active');
+        playTone(pads[color].freq);
+        setTimeout(() => pad.classList.remove('active'), 300);
+    };
+
+    const nextLevel = async () => {
+        level++;
+        document.getElementById('level').innerText = level;
+        sequence.push(Object.keys(pads)[Math.floor(Math.random() * 4)]);
+        playing = true;
+        for(let color of sequence) {
+            await new Promise(r => setTimeout(r, 600));
+            flash(color);
+        }
+        playerSeq = [];
+        playing = false;
+    };
+
+    document.querySelectorAll('.pad').forEach(pad => {
+        pad.addEventListener('click', () => {
+            if (playing) return;
+            const color = pad.id;
+            flash(color);
+            playerSeq.push(color);
+            if (playerSeq[playerSeq.length - 1] !== sequence[playerSeq.length - 1]) {
+                alert('Game Over! Score: ' + (level - 1));
+                if(level-1 > localStorage.getItem('best')) localStorage.setItem('best', level-1);
+                location.reload();
+            } else if (playerSeq.length === sequence.length) {
+                setTimeout(nextLevel, 1000);
+            }
+        });
+    });
+
+    document.getElementById('start-btn').addEventListener('click', (e) => {
+        e.target.style.display = 'none';
+        nextLevel();
+    });
+
+    document.getElementById('best').innerText = localStorage.getItem('best') || 0;
+
+    window.addEventListener('keydown', (e) => {
+        const keyMap = { r: 'red', b: 'blue', g: 'green', y: 'yellow' };
+        if(keyMap[e.key.toLowerCase()]) pads[keyMap[e.key.toLowerCase()]].el.click();
+    });
+</script>
+</body>
+</html>
